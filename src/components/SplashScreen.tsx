@@ -1,119 +1,165 @@
 import { useEffect, useState } from 'react';
-import splashImage from '@/assets/Splash.png';
 
 interface SplashScreenProps {
   onComplete: () => void;
 }
 
 export function SplashScreen({ onComplete }: SplashScreenProps) {
-  const [showPig, setShowPig] = useState(false);
+  const [phase, setPhase] = useState(0);
 
   useEffect(() => {
-    // Start pig animation after image loads
-    const pigTimer = setTimeout(() => setShowPig(true), 200);
-    const completeTimer = setTimeout(onComplete, 1500);
-    
+    const t1 = setTimeout(() => setPhase(1), 100);   // pig fade-in
+    const t2 = setTimeout(() => setPhase(2), 500);   // graph line + coins
+    const t3 = setTimeout(() => setPhase(3), 1200);  // text appears
+    const t4 = setTimeout(onComplete, 2200);          // done
+
     return () => {
-      clearTimeout(pigTimer);
-      clearTimeout(completeTimer);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
     };
   }, [onComplete]);
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
-      style={{ backgroundColor: '#78c348' }}
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden select-none"
+      style={{
+        background: 'linear-gradient(180deg, #0a1628 0%, #0f2035 30%, #124a2e 70%, #1a6b3c 100%)',
+      }}
     >
-      <img 
-        src={splashImage} 
-        alt="FinançasPRO" 
-        className="w-full h-full object-cover"
-      />
-      
-      {/* Pig animation overlay */}
-      {showPig && (
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          {/* Stacks of money at the end */}
-          <div className="absolute right-6 flex flex-col items-center gap-1">
-            {/* Money stack 1 */}
-            <div className="flex flex-col -space-y-1">
-              <div className="w-14 h-6 bg-gradient-to-r from-green-600 to-green-500 rounded-sm border border-green-700 flex items-center justify-center shadow-md">
-                <span className="text-green-900 text-xs font-bold">$100</span>
+      {/* Central content */}
+      <div className="relative flex flex-col items-center">
+        {/* Pig + Graph container */}
+        <div className="relative w-64 h-48 flex items-center justify-center">
+          {/* Pig */}
+          <svg
+            viewBox="0 0 120 110"
+            className="w-32 h-28 transition-all duration-700 ease-out"
+            style={{
+              opacity: phase >= 1 ? 1 : 0,
+              transform: phase >= 1 ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(20px)',
+            }}
+          >
+            {/* Body */}
+            <ellipse cx="60" cy="60" rx="38" ry="30" fill="white" opacity="0.95" />
+            {/* Head */}
+            <circle cx="88" cy="48" r="20" fill="white" opacity="0.95" />
+            {/* Snout */}
+            <ellipse cx="103" cy="50" rx="9" ry="7" fill="rgba(255,255,255,0.7)" stroke="white" strokeWidth="1.5" />
+            {/* Nostrils */}
+            <circle cx="100" cy="49" r="1.8" fill="rgba(10,22,40,0.4)" />
+            <circle cx="106" cy="49" r="1.8" fill="rgba(10,22,40,0.4)" />
+            {/* Ears */}
+            <ellipse cx="76" cy="30" rx="8" ry="12" fill="white" opacity="0.9" />
+            <ellipse cx="92" cy="28" rx="7" ry="11" fill="white" opacity="0.9" />
+            <ellipse cx="76" cy="30" rx="5" ry="7" fill="rgba(255,255,255,0.5)" />
+            <ellipse cx="92" cy="28" rx="4" ry="6" fill="rgba(255,255,255,0.5)" />
+            {/* Eyes */}
+            <circle cx="82" cy="44" r="2.5" fill="rgba(10,22,40,0.6)" />
+            <circle cx="94" cy="42" r="2.5" fill="rgba(10,22,40,0.6)" />
+            <circle cx="83" cy="43" r="0.8" fill="white" />
+            <circle cx="95" cy="41" r="0.8" fill="white" />
+            {/* Smile */}
+            <path d="M 96 56 Q 101 60 106 56" stroke="rgba(10,22,40,0.3)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            {/* Legs */}
+            <rect x="32" y="82" width="10" height="14" rx="5" fill="white" opacity="0.9" />
+            <rect x="48" y="82" width="10" height="14" rx="5" fill="white" opacity="0.9" />
+            <rect x="64" y="82" width="10" height="14" rx="5" fill="white" opacity="0.9" />
+            <rect x="80" y="82" width="10" height="14" rx="5" fill="white" opacity="0.9" />
+            {/* Tail */}
+            <path d="M 22 55 Q 12 48 16 58 Q 20 68 12 62" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.9" />
+            {/* Coin slot on top */}
+            <rect x="50" y="28" width="20" height="3" rx="1.5" fill="rgba(10,22,40,0.15)" />
+          </svg>
+
+          {/* Graph line rising */}
+          <svg
+            className="absolute left-2 bottom-6 transition-all duration-700 ease-out"
+            viewBox="0 0 80 60"
+            width="80"
+            height="60"
+            style={{
+              opacity: phase >= 2 ? 1 : 0,
+            }}
+          >
+            <path
+              d="M 5 55 Q 15 50 25 42 Q 35 34 45 28 Q 55 22 65 12 L 75 5"
+              fill="none"
+              stroke="rgba(74,222,128,0.7)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeDasharray="120"
+              strokeDashoffset={phase >= 2 ? '0' : '120'}
+              style={{ transition: 'stroke-dashoffset 0.8s ease-out' }}
+            />
+            {/* Arrow tip */}
+            <polygon
+              points="72,8 78,4 74,12"
+              fill="rgba(74,222,128,0.7)"
+              style={{
+                opacity: phase >= 2 ? 1 : 0,
+                transition: 'opacity 0.3s ease-out 0.7s',
+              }}
+            />
+          </svg>
+
+          {/* Falling coins */}
+          {phase >= 2 && (
+            <>
+              <div className="absolute top-0 left-1/2 -translate-x-2" style={{ animation: 'coinFall1 0.8s ease-in forwards' }}>
+                <svg width="16" height="16" viewBox="0 0 16 16">
+                  <circle cx="8" cy="8" r="7" fill="#F6C544" stroke="#D4A22A" strokeWidth="1" />
+                  <text x="8" y="11" textAnchor="middle" fontSize="8" fill="#A67C1A" fontWeight="bold">$</text>
+                </svg>
               </div>
-              <div className="w-14 h-6 bg-gradient-to-r from-green-500 to-green-400 rounded-sm border border-green-600 flex items-center justify-center shadow-md">
-                <span className="text-green-800 text-xs font-bold">$100</span>
+              <div className="absolute top-0 left-1/2 translate-x-2" style={{ animation: 'coinFall2 0.9s ease-in 0.15s forwards' }}>
+                <svg width="14" height="14" viewBox="0 0 16 16">
+                  <circle cx="8" cy="8" r="7" fill="#F6C544" stroke="#D4A22A" strokeWidth="1" />
+                  <text x="8" y="11" textAnchor="middle" fontSize="8" fill="#A67C1A" fontWeight="bold">$</text>
+                </svg>
               </div>
-              <div className="w-14 h-6 bg-gradient-to-r from-green-600 to-green-500 rounded-sm border border-green-700 flex items-center justify-center shadow-md">
-                <span className="text-green-900 text-xs font-bold">$100</span>
+              <div className="absolute top-0 left-1/2 -translate-x-4" style={{ animation: 'coinFall3 1s ease-in 0.3s forwards' }}>
+                <svg width="12" height="12" viewBox="0 0 16 16">
+                  <circle cx="8" cy="8" r="7" fill="#F6C544" stroke="#D4A22A" strokeWidth="1" />
+                  <text x="8" y="11" textAnchor="middle" fontSize="8" fill="#A67C1A" fontWeight="bold">$</text>
+                </svg>
               </div>
-            </div>
-            {/* Money stack 2 */}
-            <div className="flex flex-col -space-y-1">
-              <div className="w-14 h-6 bg-gradient-to-r from-green-500 to-green-400 rounded-sm border border-green-600 flex items-center justify-center shadow-md">
-                <span className="text-green-800 text-xs font-bold">$100</span>
-              </div>
-              <div className="w-14 h-6 bg-gradient-to-r from-green-600 to-green-500 rounded-sm border border-green-700 flex items-center justify-center shadow-md">
-                <span className="text-green-900 text-xs font-bold">$100</span>
-              </div>
-              <div className="w-14 h-6 bg-gradient-to-r from-green-500 to-green-400 rounded-sm border border-green-600 flex items-center justify-center shadow-md">
-                <span className="text-green-800 text-xs font-bold">$100</span>
-              </div>
-            </div>
-            {/* Flying $ symbols */}
-            <div className="absolute -top-4 text-yellow-400 text-2xl font-bold animate-bounce">$</div>
-            <div className="absolute -top-2 -left-3 text-yellow-300 text-lg font-bold animate-pulse">$</div>
-            <div className="absolute -top-2 -right-3 text-yellow-300 text-lg font-bold animate-pulse delay-100">$</div>
-          </div>
-          
-          {/* Pig running towards vault */}
-          <div className="animate-pig-run flex items-center">
-            {/* Green Pig with sunglasses */}
-            <svg viewBox="0 0 100 80" className="w-20 h-16 drop-shadow-lg">
-              {/* Body */}
-              <ellipse cx="50" cy="45" rx="35" ry="28" fill="#4ade80" />
-              {/* Head */}
-              <circle cx="75" cy="35" r="22" fill="#4ade80" />
-              {/* Snout */}
-              <ellipse cx="90" cy="38" rx="10" ry="8" fill="#86efac" />
-              {/* Nostrils */}
-              <circle cx="87" cy="36" r="2" fill="#166534" />
-              <circle cx="93" cy="36" r="2" fill="#166534" />
-              {/* Ears */}
-              <ellipse cx="60" cy="18" rx="8" ry="10" fill="#4ade80" />
-              <ellipse cx="80" cy="15" rx="8" ry="10" fill="#4ade80" />
-              <ellipse cx="60" cy="18" rx="5" ry="6" fill="#86efac" />
-              <ellipse cx="80" cy="15" rx="5" ry="6" fill="#86efac" />
-              {/* Sunglasses */}
-              <rect x="62" y="28" width="14" height="10" rx="2" fill="#1f2937" />
-              <rect x="78" y="28" width="14" height="10" rx="2" fill="#1f2937" />
-              <rect x="76" y="32" width="2" height="2" fill="#1f2937" />
-              <line x1="62" y1="32" x2="55" y2="28" stroke="#1f2937" strokeWidth="2" />
-              {/* Smile */}
-              <path d="M 82 46 Q 88 52 94 46" stroke="#166534" strokeWidth="2" fill="none" strokeLinecap="round" />
-              {/* Legs */}
-              <rect x="25" y="65" width="8" height="12" rx="3" fill="#4ade80" />
-              <rect x="40" y="65" width="8" height="12" rx="3" fill="#4ade80" />
-              <rect x="55" y="65" width="8" height="12" rx="3" fill="#4ade80" />
-              <rect x="70" y="65" width="8" height="12" rx="3" fill="#4ade80" />
-              {/* Tail */}
-              <path d="M 15 40 Q 5 35 8 45 Q 12 55 5 50" stroke="#4ade80" strokeWidth="4" fill="none" strokeLinecap="round" />
-            </svg>
-          </div>
+            </>
+          )}
         </div>
-      )}
-      
+
+        {/* Text */}
+        <div
+          className="mt-6 text-center transition-all duration-700 ease-out"
+          style={{
+            opacity: phase >= 3 ? 1 : 0,
+            transform: phase >= 3 ? 'translateY(0)' : 'translateY(15px)',
+          }}
+        >
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'rgba(255,255,255,0.95)' }}>
+            FinançasPRO
+          </h1>
+          <p className="mt-2 text-sm tracking-wide" style={{ color: 'rgba(74,222,128,0.8)' }}>
+            Contas, gastos e investimentos
+          </p>
+        </div>
+      </div>
+
       <style>{`
-        @keyframes pig-run {
-          0% {
-            transform: translateX(-100px);
-          }
-          100% {
-            transform: translateX(calc(50vw - 40px));
-          }
+        @keyframes coinFall1 {
+          0% { transform: translateY(-10px); opacity: 0; }
+          20% { opacity: 1; }
+          100% { transform: translateY(55px); opacity: 0; }
         }
-        
-        .animate-pig-run {
-          animation: pig-run 1s ease-in-out forwards;
+        @keyframes coinFall2 {
+          0% { transform: translateY(-10px); opacity: 0; }
+          20% { opacity: 1; }
+          100% { transform: translateY(60px); opacity: 0; }
+        }
+        @keyframes coinFall3 {
+          0% { transform: translateY(-10px); opacity: 0; }
+          20% { opacity: 1; }
+          100% { transform: translateY(50px); opacity: 0; }
         }
       `}</style>
     </div>
