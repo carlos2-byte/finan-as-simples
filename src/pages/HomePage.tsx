@@ -57,11 +57,21 @@ export default function HomePage() {
   // Compute pending (unpaid) expense transactions for alert
   const pendingItems = useMemo(() => {
     if (!showPendingAlert) return [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const twoDaysFromNow = new Date(today);
+    twoDaysFromNow.setDate(twoDaysFromNow.getDate() + 2);
+
     return items
       .filter(item => {
         if (isConsolidatedInvoice(item)) return false;
         if (item.type !== 'expense') return false;
-        return !isPaid(item.id);
+        if (isPaid(item.id)) return false;
+        // Only show if due within 2 days (or already overdue)
+        const tx = item as Transaction;
+        const [y, m, d] = tx.date.split('-').map(Number);
+        const dueDate = new Date(y, m - 1, d);
+        return dueDate <= twoDaysFromNow;
       })
       .map(item => ({
         id: item.id,
