@@ -8,11 +8,10 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
-    // Phase 0: mount (bg fade)
-    const t1 = setTimeout(() => setPhase(1), 100);   // start bg fade
-    const t2 = setTimeout(() => setPhase(2), 600);   // start pig draw
-    const t3 = setTimeout(() => setPhase(3), 1400);  // coin + chart + text
-    const t4 = setTimeout(onComplete, 2200);          // navigate
+    const t1 = setTimeout(() => setPhase(1), 100);
+    const t2 = setTimeout(() => setPhase(2), 600);
+    const t3 = setTimeout(() => setPhase(3), 1400);
+    const t4 = setTimeout(onComplete, 2200);
 
     return () => {
       clearTimeout(t1);
@@ -35,128 +34,135 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 48%, rgba(60,130,246,0.12) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(60,130,246,0.15) 0%, transparent 70%)',
         }}
       />
 
       {/* Main content area */}
-      <div className="relative flex items-center justify-center" style={{ width: 280, height: 200 }}>
-        {/* Piggy bank outline - drawn effect */}
+      <div className="relative flex items-center justify-center" style={{ width: 300, height: 220 }}>
+        {/* 3D-style piggy bank matching app icon */}
         <svg
-          viewBox="0 0 160 140"
+          viewBox="0 0 200 180"
           className="absolute"
-          style={{ width: 160, height: 140, left: 20, top: 20 }}
+          style={{
+            width: 200,
+            height: 180,
+            left: 15,
+            top: 10,
+            opacity: phase >= 2 ? 1 : 0,
+            transform: phase >= 2 ? 'scale(1)' : 'scale(0.85)',
+            transition: 'opacity 0.7s ease-out, transform 0.7s ease-out',
+          }}
         >
-          {/* Pig body */}
-          <ellipse
-            cx="70" cy="75" rx="42" ry="34"
-            fill="none"
-            stroke="white"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            style={{
-              strokeDasharray: 240,
-              strokeDashoffset: phase >= 2 ? 0 : 240,
-              transition: 'stroke-dashoffset 0.8s ease-out',
-            }}
-          />
-          {/* Head bump */}
+          <defs>
+            {/* Body gradient - white with subtle blue shadow */}
+            <radialGradient id="bodyGrad" cx="45%" cy="40%" r="55%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="60%" stopColor="#f0f0f5" />
+              <stop offset="100%" stopColor="#d8dce8" />
+            </radialGradient>
+            {/* Head gradient */}
+            <radialGradient id="headGrad" cx="50%" cy="35%" r="55%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="55%" stopColor="#f2f2f7" />
+              <stop offset="100%" stopColor="#dde0ea" />
+            </radialGradient>
+            {/* Snout gradient */}
+            <radialGradient id="snoutGrad" cx="50%" cy="40%" r="50%">
+              <stop offset="0%" stopColor="#f5f0f0" />
+              <stop offset="100%" stopColor="#e8e0e0" />
+            </radialGradient>
+            {/* Ear gradient */}
+            <radialGradient id="earGrad" cx="50%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="100%" stopColor="#e0dce8" />
+            </radialGradient>
+            {/* Inner ear pink tint */}
+            <radialGradient id="earInnerGrad" cx="50%" cy="40%" r="50%">
+              <stop offset="0%" stopColor="rgba(255,200,200,0.35)" />
+              <stop offset="100%" stopColor="rgba(255,200,200,0.05)" />
+            </radialGradient>
+            {/* Coin gradient */}
+            <linearGradient id="coinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFE066" />
+              <stop offset="30%" stopColor="#FFD700" />
+              <stop offset="70%" stopColor="#F6C544" />
+              <stop offset="100%" stopColor="#D4A22A" />
+            </linearGradient>
+            {/* Coin shine */}
+            <radialGradient id="coinShine" cx="35%" cy="30%" r="40%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.6)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            </radialGradient>
+            {/* Body shadow */}
+            <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="rgba(0,0,0,0.15)" />
+              <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+            </radialGradient>
+            {/* Body highlight */}
+            <radialGradient id="bodyHighlight" cx="38%" cy="30%" r="35%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            </radialGradient>
+          </defs>
+
+          {/* Ground shadow */}
+          <ellipse cx="100" cy="162" rx="55" ry="8" fill="url(#shadowGrad)" />
+
+          {/* BODY - main round shape */}
+          <ellipse cx="95" cy="100" rx="52" ry="42" fill="url(#bodyGrad)" />
+          {/* Body highlight */}
+          <ellipse cx="82" cy="88" rx="28" ry="22" fill="url(#bodyHighlight)" />
+
+          {/* LEGS */}
+          <rect x="58" y="132" width="14" height="20" rx="7" fill="url(#bodyGrad)" />
+          <rect x="78" y="134" width="14" height="20" rx="7" fill="url(#bodyGrad)" />
+          <rect x="98" y="134" width="14" height="20" rx="7" fill="#eaeaf0" />
+          <rect x="118" y="132" width="14" height="20" rx="7" fill="#eaeaf0" />
+          {/* Leg shadows */}
+          <rect x="58" y="142" width="14" height="10" rx="7" fill="rgba(0,0,0,0.04)" />
+          <rect x="78" y="144" width="14" height="10" rx="7" fill="rgba(0,0,0,0.04)" />
+          <rect x="98" y="144" width="14" height="10" rx="7" fill="rgba(0,0,0,0.04)" />
+          <rect x="118" y="142" width="14" height="10" rx="7" fill="rgba(0,0,0,0.04)" />
+
+          {/* TAIL */}
           <path
-            d="M 95 55 Q 115 35 120 55 Q 122 65 110 72"
+            d="M 43 95 Q 30 82 34 98 Q 38 108 28 102"
             fill="none"
-            stroke="white"
-            strokeWidth="2.5"
+            stroke="#e0dce8"
+            strokeWidth="3.5"
             strokeLinecap="round"
-            style={{
-              strokeDasharray: 100,
-              strokeDashoffset: phase >= 2 ? 0 : 100,
-              transition: 'stroke-dashoffset 0.8s ease-out 0.1s',
-            }}
           />
-          {/* Snout */}
-          <ellipse
-            cx="122" cy="62" rx="10" ry="8"
-            fill="none"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            style={{
-              strokeDasharray: 60,
-              strokeDashoffset: phase >= 2 ? 0 : 60,
-              transition: 'stroke-dashoffset 0.6s ease-out 0.2s',
-            }}
-          />
+
+          {/* HEAD - overlapping body */}
+          <circle cx="130" cy="88" r="28" fill="url(#headGrad)" />
+          {/* Head highlight */}
+          <circle cx="124" cy="78" r="14" fill="rgba(255,255,255,0.4)" />
+
+          {/* EARS */}
+          <ellipse cx="112" cy="58" rx="10" ry="16" fill="url(#earGrad)" transform="rotate(-10 112 58)" />
+          <ellipse cx="112" cy="58" rx="6" ry="10" fill="url(#earInnerGrad)" transform="rotate(-10 112 58)" />
+          <ellipse cx="135" cy="54" rx="9" ry="15" fill="url(#earGrad)" transform="rotate(10 135 54)" />
+          <ellipse cx="135" cy="54" rx="5.5" ry="9" fill="url(#earInnerGrad)" transform="rotate(10 135 54)" />
+
+          {/* SNOUT */}
+          <ellipse cx="150" cy="92" rx="13" ry="10" fill="url(#snoutGrad)" />
           {/* Nostrils */}
-          <circle cx="119" cy="62" r="1.5" fill="white"
-            style={{ opacity: phase >= 2 ? 1 : 0, transition: 'opacity 0.3s ease-out 0.5s' }} />
-          <circle cx="125" cy="62" r="1.5" fill="white"
-            style={{ opacity: phase >= 2 ? 1 : 0, transition: 'opacity 0.3s ease-out 0.5s' }} />
-          {/* Eye */}
-          <circle cx="105" cy="50" r="2.5" fill="white"
-            style={{ opacity: phase >= 2 ? 1 : 0, transition: 'opacity 0.3s ease-out 0.4s' }} />
-          {/* Ear */}
-          <path
-            d="M 85 42 Q 80 28 90 35"
-            fill="none"
-            stroke="white"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            style={{
-              strokeDasharray: 30,
-              strokeDashoffset: phase >= 2 ? 0 : 30,
-              transition: 'stroke-dashoffset 0.5s ease-out 0.15s',
-            }}
-          />
-          {/* Legs */}
-          <rect x="40" y="100" width="10" height="16" rx="5" fill="none" stroke="white" strokeWidth="2"
-            style={{
-              strokeDasharray: 50,
-              strokeDashoffset: phase >= 2 ? 0 : 50,
-              transition: 'stroke-dashoffset 0.5s ease-out 0.3s',
-            }}
-          />
-          <rect x="58" y="100" width="10" height="16" rx="5" fill="none" stroke="white" strokeWidth="2"
-            style={{
-              strokeDasharray: 50,
-              strokeDashoffset: phase >= 2 ? 0 : 50,
-              transition: 'stroke-dashoffset 0.5s ease-out 0.35s',
-            }}
-          />
-          <rect x="76" y="100" width="10" height="16" rx="5" fill="none" stroke="white" strokeWidth="2"
-            style={{
-              strokeDasharray: 50,
-              strokeDashoffset: phase >= 2 ? 0 : 50,
-              transition: 'stroke-dashoffset 0.5s ease-out 0.4s',
-            }}
-          />
-          <rect x="94" y="100" width="10" height="16" rx="5" fill="none" stroke="white" strokeWidth="2"
-            style={{
-              strokeDasharray: 50,
-              strokeDashoffset: phase >= 2 ? 0 : 50,
-              transition: 'stroke-dashoffset 0.5s ease-out 0.45s',
-            }}
-          />
-          {/* Tail */}
-          <path
-            d="M 28 68 Q 18 58 22 72 Q 26 82 18 76"
-            fill="none"
-            stroke="white"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            style={{
-              strokeDasharray: 40,
-              strokeDashoffset: phase >= 2 ? 0 : 40,
-              transition: 'stroke-dashoffset 0.5s ease-out 0.5s',
-            }}
-          />
-          {/* Coin slot */}
-          <line x1="60" y1="40" x2="80" y2="40" stroke="white" strokeWidth="2.5" strokeLinecap="round"
-            style={{
-              strokeDasharray: 20,
-              strokeDashoffset: phase >= 2 ? 0 : 20,
-              transition: 'stroke-dashoffset 0.4s ease-out 0.6s',
-            }}
-          />
+          <circle cx="146" cy="91" r="2.5" fill="rgba(80,70,80,0.25)" />
+          <circle cx="154" cy="91" r="2.5" fill="rgba(80,70,80,0.25)" />
+
+          {/* EYES */}
+          <circle cx="122" cy="82" r="3.5" fill="rgba(20,20,40,0.7)" />
+          <circle cx="140" cy="80" r="3.5" fill="rgba(20,20,40,0.7)" />
+          {/* Eye shine */}
+          <circle cx="123.5" cy="80.5" r="1.2" fill="white" />
+          <circle cx="141.5" cy="78.5" r="1.2" fill="white" />
+
+          {/* Subtle smile */}
+          <path d="M 142 98 Q 148 103 155 98" stroke="rgba(80,70,80,0.15)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+
+          {/* COIN SLOT */}
+          <rect x="85" y="56" width="22" height="3.5" rx="1.75" fill="rgba(20,20,40,0.12)" />
         </svg>
 
         {/* Bar chart - right side */}
@@ -164,7 +170,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
           className="absolute flex items-end gap-1"
           style={{
             right: 0,
-            bottom: 30,
+            bottom: 32,
             height: 70,
             opacity: phase >= 3 ? 1 : 0,
             transition: 'opacity 0.4s ease-out',
@@ -205,22 +211,28 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         <div
           className="absolute"
           style={{
-            left: 82,
-            top: phase >= 3 ? 42 : -20,
+            left: 108,
+            top: phase >= 3 ? 48 : -25,
             opacity: phase >= 3 ? 1 : 0,
             transition: 'top 0.5s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.2s ease-out',
           }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24">
+          <svg width="24" height="24" viewBox="0 0 28 28">
+            <circle cx="14" cy="14" r="12" fill="url(#coinGrad2)" stroke="#B8860B" strokeWidth="1.5" />
+            <circle cx="14" cy="14" r="12" fill="url(#coinShine2)" />
+            <text x="14" y="19" textAnchor="middle" fontSize="13" fill="#8B6914" fontWeight="bold">$</text>
             <defs>
-              <linearGradient id="coinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#FFD700" />
-                <stop offset="50%" stopColor="#F6C544" />
+              <linearGradient id="coinGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FFE066" />
+                <stop offset="30%" stopColor="#FFD700" />
+                <stop offset="70%" stopColor="#F6C544" />
                 <stop offset="100%" stopColor="#D4A22A" />
               </linearGradient>
+              <radialGradient id="coinShine2" cx="35%" cy="30%" r="40%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.5)" />
+                <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+              </radialGradient>
             </defs>
-            <circle cx="12" cy="12" r="10" fill="url(#coinGrad)" stroke="#B8860B" strokeWidth="1.5" />
-            <text x="12" y="16" textAnchor="middle" fontSize="11" fill="#8B6914" fontWeight="bold">$</text>
           </svg>
         </div>
       </div>
