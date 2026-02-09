@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Controle de Finanças</string>
     <string name="title_activity_main">Controle de Finanças</string>
-    <string name="package_name">com.carlos.financaspro</string>
-    <string name="custom_url_scheme">com.carlos.financaspro</string>
+    <string name="package_name">com.carlos.controledefinancas</string>
+    <string name="custom_url_scheme">com.carlos.controledefinancas</string>
 </resources>

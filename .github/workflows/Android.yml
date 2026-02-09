@@ -35,14 +35,14 @@ jobs:
           java-version: '17'
 
       # Garante NODE_ENV=production para evitar erro de bundle
-      - name: Gerar bundle JS + APK
+      - name: Gerar bundle JS + APK (Release)
         run: |
           export NODE_ENV=production
           cd android
-          ./gradlew assembleRelease
+          ./gradlew clean assembleRelease
 
-      - name: Salvar APK final
+      - name: Salvar APK Release
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: ControleDeFinancas-release
+          path: android/app/build/outputs/apk/release/ControleDeFinancas-release.apk
