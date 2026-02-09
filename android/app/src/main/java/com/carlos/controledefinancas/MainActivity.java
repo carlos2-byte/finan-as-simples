@@ -1,4 +1,4 @@
-package com.carlos.financaspro;
+package com.carlos.controledefinancas;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;

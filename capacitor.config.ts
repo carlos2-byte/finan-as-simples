@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.carlos.financaspro',
+  appId: 'com.carlos.controledefinancas',
   appName: 'Controle de Finanças',
   webDir: 'dist',
   plugins: {
