@@ -15,8 +15,16 @@
         <item name="android:background">@null</item>
     </style>
 
-
+    <!-- Splash de lançamento (Android 12+) -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <!-- Cor de fundo do splash -->
+        <item name="android:windowSplashScreenBackground">@color/black</item>
+
+        <!-- Ícone/imagem central -->
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash</item>
+
+        <!-- Tema aplicado após o splash -->
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
+
 </resources>
