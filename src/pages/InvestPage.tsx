@@ -290,7 +290,7 @@ export default function InvestmentsPage() {
               {investments.map(inv => {
                 const dailyYield = getDailyYieldEstimate(inv.currentAmount, inv.yieldRate, inv.cdiBonusPercent);
                 const monthlyYield = getMonthlyYieldEstimate(inv.currentAmount, inv.yieldRate, inv.cdiBonusPercent);
-                const totalYield = inv.currentAmount - inv.initialAmount;
+                const totalYield = inv.accumulatedYield ?? 0;
                 
                 return (
                   <Card key={inv.id}>
