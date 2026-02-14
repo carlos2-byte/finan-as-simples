@@ -63,6 +63,16 @@ export default function SettingsPage() {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Local string states for decimal inputs
+  const [yieldRateStr, setYieldRateStr] = useState('');
+  const [extraYieldStr, setExtraYieldStr] = useState('');
+
+  // Sync local strings when settings load
+  useEffect(() => {
+    setYieldRateStr(settings.balanceYieldRate ? String(settings.balanceYieldRate) : '');
+    setExtraYieldStr(settings.balanceExtraYieldPercent ? String(settings.balanceExtraYieldPercent) : '');
+  }, [settings.balanceYieldRate, settings.balanceExtraYieldPercent]);
+
   useEffect(() => {
     isPasswordEnabled().then(setHasPassword);
   }, []);
@@ -275,16 +285,20 @@ export default function SettingsPage() {
                     <Input
                       type="text"
                       inputMode="decimal"
-                      value={settings.balanceYieldRate ?? ''}
+                      value={yieldRateStr}
                       onChange={e => {
                         const raw = e.target.value;
-                        // Allow empty, digits, dots, and commas for decimal input
                         if (raw === '' || /^[\d.,]*$/.test(raw)) {
-                          const val = parseFloat(raw.replace(',', '.'));
-                          updateSettings({ balanceYieldRate: raw === '' ? 0 : isNaN(val) ? 0 : val });
+                          setYieldRateStr(raw);
                         }
                       }}
-                      placeholder="Ex: 10.5"
+                      onBlur={() => {
+                        const val = parseFloat(yieldRateStr.replace(',', '.'));
+                        const num = isNaN(val) ? 0 : val;
+                        updateSettings({ balanceYieldRate: num });
+                        setYieldRateStr(num ? String(num) : '');
+                      }}
+                      placeholder="Ex: 14.9"
                     />
                   </div>
 
@@ -306,13 +320,18 @@ export default function SettingsPage() {
                       <Input
                         type="text"
                         inputMode="decimal"
-                        value={settings.balanceExtraYieldPercent ?? ''}
+                        value={extraYieldStr}
                         onChange={e => {
                           const raw = e.target.value;
                           if (raw === '' || /^[\d.,]*$/.test(raw)) {
-                            const val = parseFloat(raw.replace(',', '.'));
-                            updateSettings({ balanceExtraYieldPercent: raw === '' ? 0 : isNaN(val) ? 0 : val });
+                            setExtraYieldStr(raw);
                           }
+                        }}
+                        onBlur={() => {
+                          const val = parseFloat(extraYieldStr.replace(',', '.'));
+                          const num = isNaN(val) ? 0 : val;
+                          updateSettings({ balanceExtraYieldPercent: num });
+                          setExtraYieldStr(num ? String(num) : '');
                         }}
                         placeholder="Ex: 105"
                       />
