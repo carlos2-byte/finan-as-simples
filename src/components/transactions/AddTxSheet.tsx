@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { getCategories, CreditCard, Transaction } from '@/lib/storage';
+import { getCategories, getAllCategories, CreditCard, Transaction } from '@/lib/storage';
 import { getLocalDateString, getInvoiceMonth, addMonthsToDate, addYearsToDate } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -35,7 +35,7 @@ interface AddTransactionSheetProps {
   editingTransaction?: Transaction | null;
 }
 
-const categories = getCategories();
+const defaultCategories = getCategories();
 
 export function AddTransactionSheet({ 
   open, 
@@ -57,6 +57,12 @@ export function AddTransactionSheet({
   const [recurrenceType, setRecurrenceType] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
   const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allCategories, setAllCategories] = useState(defaultCategories);
+
+  // Load custom categories
+  useEffect(() => {
+    getAllCategories().then(setAllCategories);
+  }, [open]);
 
   // Check if editing a recurring or installment transaction
   const isEditingRecurringOrInstallment = editingTransaction && (
@@ -144,7 +150,7 @@ export function AddTransactionSheet({
     }
   };
 
-  const expenseCategories = categories.filter(c => c.type === 'expense');
+  const expenseCategories = allCategories.filter(c => c.type === 'expense');
   const isEditing = !!editingTransaction;
 
   return (

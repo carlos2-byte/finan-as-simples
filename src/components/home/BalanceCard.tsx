@@ -15,6 +15,8 @@ interface BalanceCardProps {
   dailyYield?: number;
   balanceYieldEnabled?: boolean;
   balanceYieldRate?: number;
+  balanceExtraYieldEnabled?: boolean;
+  balanceExtraYieldPercent?: number;
   balanceYieldTaxMode?: 'daily' | 'on_withdrawal';
   onToggleBalanceYield?: () => void;
 }
@@ -28,10 +30,13 @@ export function BalanceCard({
   dailyYield = 0,
   balanceYieldEnabled = false,
   balanceYieldRate = 0,
+  balanceExtraYieldEnabled = false,
+  balanceExtraYieldPercent = 0,
   balanceYieldTaxMode = 'on_withdrawal',
   onToggleBalanceYield,
 }: BalanceCardProps) {
   const hasFutureExpenses = projectedExpenses > 0;
+  const effectiveRate = balanceYieldRate + (balanceExtraYieldEnabled ? balanceExtraYieldPercent : 0);
   
   return (
     <Card className="bg-gradient-to-br from-primary/20 to-accent/10 border-primary/20">
@@ -92,7 +97,7 @@ export function BalanceCard({
                 </div>
               )}
               <p className="text-[10px] text-muted-foreground text-center">
-                Saldo rendendo a {balanceYieldRate}% a.a. • Imposto {balanceYieldTaxMode === 'daily' ? 'descontado diariamente' : 'descontado apenas no saque'}
+                Saldo rendendo a {effectiveRate}% a.a.{balanceExtraYieldEnabled && balanceExtraYieldPercent > 0 ? ` (${balanceYieldRate}% + ${balanceExtraYieldPercent}% extra)` : ''} • Imposto {balanceYieldTaxMode === 'daily' ? 'descontado diariamente' : 'descontado apenas no saque'}
               </p>
             </div>
           )}

@@ -7,7 +7,7 @@
  * 3. Real-time updates when transactions are added/edited/deleted
  */
 
-import { getTransactionsByMonth, Transaction } from './storage';
+import { getTransactionsByMonth, Transaction, getSettings } from './storage';
 import { getInvestmentsForCoverage, calculateDailyYield } from './investments';
 import { getLocalDateString, parseLocalDate, getLocalMonth, addDaysToDate } from './dateUtils';
 import { ConsolidatedInvoice } from './invoiceUtils';
@@ -71,14 +71,16 @@ export async function calculateRealTimeBalances(
   // Saldo Atual = Entradas - despesas/faturas já vencidas
   const currentBalance = totalIncome - pastExpenses;
   
-  // Calculate daily yield based on current balance (if positive)
+  // Calculate daily yield based on current balance using settings rate
   let dailyYield = 0;
   if (currentBalance > 0) {
-    const coverageInvestments = await getInvestmentsForCoverage();
-    if (coverageInvestments.length > 0) {
-      const inv = coverageInvestments[0];
-      const grossYield = calculateDailyYield(currentBalance, inv.yieldRate, inv.cdiBonusPercent);
-      dailyYield = grossYield;
+    const settings = await getSettings();
+    if (settings.balanceYieldEnabled && settings.balanceYieldRate) {
+      let effectiveRate = settings.balanceYieldRate;
+      if (settings.balanceExtraYieldEnabled && settings.balanceExtraYieldPercent) {
+        effectiveRate += settings.balanceExtraYieldPercent;
+      }
+      dailyYield = calculateDailyYield(currentBalance, effectiveRate);
     }
   }
   
@@ -135,11 +137,13 @@ export async function calculateProjectedBalance(
   
   let dailyYield = 0;
   if (currentBalance > 0) {
-    const coverageInvestments = await getInvestmentsForCoverage();
-    if (coverageInvestments.length > 0) {
-      const inv = coverageInvestments[0];
-      const grossYield = calculateDailyYield(currentBalance, inv.yieldRate, inv.cdiBonusPercent);
-      dailyYield = grossYield;
+    const settings = await getSettings();
+    if (settings.balanceYieldEnabled && settings.balanceYieldRate) {
+      let effectiveRate = settings.balanceYieldRate;
+      if (settings.balanceExtraYieldEnabled && settings.balanceExtraYieldPercent) {
+        effectiveRate += settings.balanceExtraYieldPercent;
+      }
+      dailyYield = calculateDailyYield(currentBalance, effectiveRate);
     }
   }
   
@@ -188,12 +192,15 @@ export async function calculateAccumulatedYield(month: string): Promise<number> 
     return 0;
   }
   
-  const coverageInvestments = await getInvestmentsForCoverage();
-  if (coverageInvestments.length === 0) {
+  const settings = await getSettings();
+  if (!settings.balanceYieldEnabled || !settings.balanceYieldRate) {
     return 0;
   }
   
-  const inv = coverageInvestments[0];
+  let effectiveRate = settings.balanceYieldRate;
+  if (settings.balanceExtraYieldEnabled && settings.balanceExtraYieldPercent) {
+    effectiveRate += settings.balanceExtraYieldPercent;
+  }
   
   // Determine the range of dates to calculate
   const monthStart = `${month}-01`;
@@ -223,7 +230,7 @@ export async function calculateAccumulatedYield(month: string): Promise<number> 
     }
     
     if (balance > 0) {
-      const grossYield = calculateDailyYield(balance, inv.yieldRate, inv.cdiBonusPercent);
+      const grossYield = calculateDailyYield(balance, effectiveRate);
       totalYield += grossYield;
     }
     
