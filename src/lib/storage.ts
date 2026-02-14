@@ -53,11 +53,22 @@ export interface AppSettings {
   balanceYieldEnabled?: boolean;
   balanceYieldRate?: number; // % a.a.
   balanceYieldTaxMode?: 'daily' | 'on_withdrawal';
+  balanceExtraYieldEnabled?: boolean;
+  balanceExtraYieldPercent?: number; // % adicional
+}
+
+export interface CustomCategory {
+  id: string;
+  name: string;
+  icon: string;
+  type: 'expense' | 'income';
+  color: string;
 }
 
 const TRANSACTIONS_KEY = 'transactions';
 const CARDS_KEY = 'creditCards';
 const SETTINGS_KEY = 'app_settings';
+const CUSTOM_CATEGORIES_KEY = 'custom_categories';
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'light',
@@ -80,8 +91,35 @@ export function getCategories() {
   return categories;
 }
 
+export async function getAllCategories(): Promise<typeof categories> {
+  const custom = await getCustomCategories();
+  return [...categories, ...custom];
+}
+
 export function getCategoryById(id: string) {
   return categories.find(c => c.id === id) || categories.find(c => c.id === 'other');
+}
+
+export async function getCategoryByIdAsync(id: string) {
+  const all = await getAllCategories();
+  return all.find(c => c.id === id) || categories.find(c => c.id === 'other');
+}
+
+// Custom Categories
+export async function getCustomCategories(): Promise<CustomCategory[]> {
+  return (await defaultAdapter.getItem<CustomCategory[]>(CUSTOM_CATEGORIES_KEY, [])) ?? [];
+}
+
+export async function addCustomCategory(cat: CustomCategory): Promise<void> {
+  const custom = await getCustomCategories();
+  custom.push(cat);
+  await defaultAdapter.setItem(CUSTOM_CATEGORIES_KEY, custom);
+}
+
+export async function deleteCustomCategory(id: string): Promise<void> {
+  const custom = await getCustomCategories();
+  const filtered = custom.filter(c => c.id !== id);
+  await defaultAdapter.setItem(CUSTOM_CATEGORIES_KEY, filtered);
 }
 
 // Settings
@@ -312,11 +350,12 @@ const LAST_YIELD_PROCESS_KEY = 'last_yield_process_date';
 
 // Export/Import
 export async function exportAllData(includeInvestments: boolean = true): Promise<string> {
-  const [transactions, cards, settings, securityConfig] = await Promise.all([
+  const [transactions, cards, settings, securityConfig, customCategories] = await Promise.all([
     listTransactionObjects(),
     getCreditCards(),
     getSettings(),
     defaultAdapter.getItem<{ passwordHash?: string } | null>('app_password', null),
+    getCustomCategories(),
   ]);
   
   const data: Record<string, unknown> = {
@@ -327,6 +366,7 @@ export async function exportAllData(includeInvestments: boolean = true): Promise
     settings,
     includesInvestments: includeInvestments,
     passwordHash: securityConfig?.passwordHash || null,
+    customCategories,
   };
   
   if (includeInvestments) {
@@ -357,6 +397,9 @@ export async function importAllData(jsonString: string): Promise<void> {
   }
   if (data.settings) {
     await defaultAdapter.setItem(SETTINGS_KEY, data.settings);
+  }
+  if (data.customCategories) {
+    await defaultAdapter.setItem(CUSTOM_CATEGORIES_KEY, data.customCategories);
   }
   
   // Import investments if present in backup

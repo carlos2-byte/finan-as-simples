@@ -10,6 +10,7 @@ import {
   Trash2,
   FolderDown,
   TrendingUp,
+  Sparkles,
 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { PageContainer } from '@/components/layout/PageContainer';
@@ -33,6 +34,7 @@ import { exportToFile, isNativePlatform } from '@/lib/fileExport';
 import { toast } from '@/hooks/use-toast';
 import { PasswordSetupSheet } from '@/components/security/PwdSetupSheet';
 import { ExportBackupDialog } from '@/components/settings/ExportDialog';
+import { CategoryManager } from '@/components/settings/CategoryManager';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -275,12 +277,50 @@ export default function SettingsPage() {
                       inputMode="decimal"
                       value={settings.balanceYieldRate ?? ''}
                       onChange={e => {
-                        const val = parseFloat(e.target.value.replace(',', '.'));
-                        updateSettings({ balanceYieldRate: isNaN(val) ? 0 : val });
+                        const raw = e.target.value;
+                        // Allow empty, digits, dots, and commas for decimal input
+                        if (raw === '' || /^[\d.,]*$/.test(raw)) {
+                          const val = parseFloat(raw.replace(',', '.'));
+                          updateSettings({ balanceYieldRate: raw === '' ? 0 : isNaN(val) ? 0 : val });
+                        }
                       }}
-                      placeholder="Ex: 10"
+                      placeholder="Ex: 10.5"
                     />
                   </div>
+
+                  {/* Extra Yield */}
+                  <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      <Label>Rendimento Extra</Label>
+                    </div>
+                    <Switch
+                      checked={settings.balanceExtraYieldEnabled ?? false}
+                      onCheckedChange={(v) => updateSettings({ balanceExtraYieldEnabled: v })}
+                    />
+                  </div>
+
+                  {settings.balanceExtraYieldEnabled && (
+                    <div className="space-y-2">
+                      <Label>Percentual extra (% ao ano)</Label>
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        value={settings.balanceExtraYieldPercent ?? ''}
+                        onChange={e => {
+                          const raw = e.target.value;
+                          if (raw === '' || /^[\d.,]*$/.test(raw)) {
+                            const val = parseFloat(raw.replace(',', '.'));
+                            updateSettings({ balanceExtraYieldPercent: raw === '' ? 0 : isNaN(val) ? 0 : val });
+                          }
+                        }}
+                        placeholder="Ex: 2.5"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Será somado à taxa principal. Total: {((settings.balanceYieldRate ?? 0) + (settings.balanceExtraYieldPercent ?? 0)).toFixed(2)}% a.a.
+                      </p>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label>Imposto é retirado diariamente?</Label>
@@ -307,6 +347,9 @@ export default function SettingsPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Categories */}
+          <CategoryManager />
 
           {/* Data Management */}
           <Card>
