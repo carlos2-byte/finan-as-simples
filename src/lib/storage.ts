@@ -310,10 +310,11 @@ const LAST_YIELD_PROCESS_KEY = 'last_yield_process_date';
 
 // Export/Import
 export async function exportAllData(includeInvestments: boolean = true): Promise<string> {
-  const [transactions, cards, settings] = await Promise.all([
+  const [transactions, cards, settings, securityConfig] = await Promise.all([
     listTransactionObjects(),
     getCreditCards(),
     getSettings(),
+    defaultAdapter.getItem<{ passwordHash?: string } | null>('app_password', null),
   ]);
   
   const data: Record<string, unknown> = {
@@ -323,6 +324,7 @@ export async function exportAllData(includeInvestments: boolean = true): Promise
     creditCards: cards,
     settings,
     includesInvestments: includeInvestments,
+    passwordHash: securityConfig?.passwordHash || null,
   };
   
   if (includeInvestments) {

@@ -7,9 +7,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LockScreen } from "@/components/security/LockScreen";
 import { SplashScreen } from "@/components/SplashScreen";
+import { SetupScreen, APP_CONFIGURED_KEY } from "@/components/setup/SetupScreen";
 
 import { useAppLock } from "@/hooks/useAppLock";
-import { generateAutoCardPayments } from "@/lib/autoCardPay";
+import { defaultAdapter } from "@/lib/storageAdapter";
 import HomePage from "./pages/HomePage";
 import DashboardPage from "./pages/DashboardPage";
 import CardsPage from "./pages/CardsPage";
@@ -20,17 +21,33 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+interface AppConfig {
+  appConfigured: boolean;
+  hasPassword: boolean;
+  requirePassword: boolean;
+}
+
 function AppContent() {
-  const { hasPassword, loading } = useAppLock();
+  const { hasPassword, loading, refresh } = useAppLock();
   const [unlocked, setUnlocked] = useState(false);
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [appConfigured, setAppConfigured] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    checkConfigured();
+  }, []);
+
+  const checkConfigured = async () => {
+    const config = await defaultAdapter.getItem<AppConfig | null>(APP_CONFIGURED_KEY, null);
+    setAppConfigured(config?.appConfigured === true);
+  };
 
   if (showSplash) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
-  if (loading) {
+  // Still checking config
+  if (appConfigured === null || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Carregando...</div>
@@ -38,7 +55,20 @@ function AppContent() {
     );
   }
 
-  // If password is set and not unlocked in this session, show lock screen
+  // First run → setup
+  if (!appConfigured) {
+    return (
+      <SetupScreen
+        onComplete={() => {
+          setAppConfigured(true);
+          setUnlocked(true);
+          refresh();
+        }}
+      />
+    );
+  }
+
+  // Has password and not unlocked → lock screen
   if (hasPassword && !unlocked) {
     return (
       <LockScreen 
