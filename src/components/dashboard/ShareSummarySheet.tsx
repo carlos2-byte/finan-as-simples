@@ -94,7 +94,32 @@ export function ShareSummarySheet({
   };
 
   /** Save base64 to native filesystem and return URI */
-  const saveToNativeFs = async (base64Data: string, filename: string): Promise<string> => {
+  const saveToNativeFs = async (base64Data: string, filename: string, toDownloads = false): Promise<string> => {
+    // Try Downloads first for visibility, fallback to Cache
+    if (toDownloads) {
+      try {
+        const result = await Filesystem.writeFile({
+          path: `Download/${filename}`,
+          data: base64Data,
+          directory: Directory.ExternalStorage,
+          recursive: true,
+        });
+        return result.uri;
+      } catch {
+        // Fallback to Documents
+        try {
+          const result = await Filesystem.writeFile({
+            path: filename,
+            data: base64Data,
+            directory: Directory.Documents,
+            recursive: true,
+          });
+          return result.uri;
+        } catch {
+          // Final fallback to Cache
+        }
+      }
+    }
     const result = await Filesystem.writeFile({
       path: filename,
       data: base64Data,
@@ -166,11 +191,12 @@ export function ShareSummarySheet({
       const pdfFilename = `resumo-financeiro-${month}.pdf`;
 
       if (isNative) {
-        // Native: save to filesystem then share
+        // Native: save to Downloads folder
         const pdfBase64 = pdf.output('datauristring').split(',')[1];
-        const uri = await saveToNativeFs(pdfBase64, pdfFilename);
+        const uri = await saveToNativeFs(pdfBase64, pdfFilename, true);
+        toast({ title: 'PDF salvo!', description: 'Verifique na pasta Downloads ou Documentos.' });
+        // Open share sheet so user can choose where to send/save
         await nativeShare(uri, 'Resumo Financeiro PDF');
-        toast({ title: 'PDF compartilhado com sucesso!' });
       } else {
         // Web: download normally
         pdf.save(pdfFilename);
@@ -197,9 +223,9 @@ export function ShareSummarySheet({
 
       if (isNative) {
         const base64 = canvasToBase64(mergedCanvas);
-        const uri = await saveToNativeFs(base64, imgFilename);
+        const uri = await saveToNativeFs(base64, imgFilename, true);
+        toast({ title: 'Imagem salva!', description: 'Verifique na pasta Downloads ou Documentos.' });
         await nativeShare(uri, 'Resumo Financeiro Imagem');
-        toast({ title: 'Imagem compartilhada com sucesso!' });
       } else {
         const link = document.createElement('a');
         link.download = imgFilename;
@@ -287,10 +313,10 @@ export function ShareSummarySheet({
             PDF
           </Button>
           <Button variant="outline" className="flex-1" onClick={handleDownloadImage} disabled={!!generating}>
-            {generating === 'image' && !navigator.share ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
+            {generating === 'image' && !generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ImageIcon className="h-4 w-4 mr-2" />}
             Imagem
           </Button>
-          {typeof navigator !== 'undefined' && navigator.share && (
+          {(isNative || (typeof navigator !== 'undefined' && navigator.share)) && (
             <Button className="flex-1" onClick={handleShare} disabled={!!generating}>
               {generating === 'image' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Share2 className="h-4 w-4 mr-2" />}
               Enviar
