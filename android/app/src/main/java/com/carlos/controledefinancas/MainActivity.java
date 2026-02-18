@@ -1,76 +1,124 @@
 package com.carlos.controledefinancas;
 
-import android.net.Uri;
 import android.os.Bundle;
-import android.graphics.Color;
-import android.view.View;
-import android.widget.VideoView;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.Gravity;
 import android.widget.FrameLayout;
 
+import androidx.core.splashscreen.SplashScreen;
+
 import com.getcapacitor.BridgeActivity;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import com.google.android.gms.ads.LoadAdError;
 
 public class MainActivity extends BridgeActivity {
 
+    private AdView adView;
+    private InterstitialAd mInterstitialAd;
+    private Handler adHandler;
+
+    private boolean isFirstLaunch = true;
+
+    private static final long AD_INTERVAL = 8 * 60 * 1000; // 8 minutos
+
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
+
+        SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
 
-        // Fundo preto na janela para evitar flash branco
-        getWindow().getDecorView().setBackgroundColor(Color.BLACK);
+        adHandler = new Handler(Looper.getMainLooper());
 
-        // Esconder a WebView do Capacitor durante o splash
-        if (getBridge() != null && getBridge().getWebView() != null) {
-            getBridge().getWebView().setVisibility(View.INVISIBLE);
-        }
+        MobileAds.initialize(this, initializationStatus -> {});
 
-        // Splash video — exibido apenas na abertura
-        showSplashVideo();
+        createBanner();
+        loadInterstitial(); // começa carregar durante o Splash
+
+        startAdLoop();
     }
 
-    private void showSplashVideo() {
-        try {
-            android.util.Log.d("MainActivity", "Splash video: iniciando");
-            FrameLayout rootView = (FrameLayout) getWindow().getDecorView().findViewById(android.R.id.content);
+    private void createBanner() {
 
-            VideoView videoView = new VideoView(this);
-            videoView.setBackgroundColor(Color.BLACK);
-            videoView.setLayoutParams(new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            ));
+        adView = new AdView(this);
+        adView.setAdSize(AdSize.BANNER);
+        adView.setAdUnitId("ca-app-pub-3940256099942544/6300978111");
 
-            Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.splash_video);
-            videoView.setVideoURI(videoUri);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adView.loadAd(adRequest);
 
-            videoView.setOnCompletionListener(mp -> {
-                android.util.Log.d("MainActivity", "Splash video: finalizado");
-                rootView.removeView(videoView);
-                // Mostrar WebView somente após o vídeo terminar
-                if (getBridge() != null && getBridge().getWebView() != null) {
-                    getBridge().getWebView().setVisibility(View.VISIBLE);
-                }
-            });
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+        );
 
-            videoView.setOnErrorListener((mp, what, extra) -> {
-                android.util.Log.e("MainActivity", "Splash video: erro " + what);
-                rootView.removeView(videoView);
-                // Em caso de erro, mostrar WebView imediatamente
-                if (getBridge() != null && getBridge().getWebView() != null) {
-                    getBridge().getWebView().setVisibility(View.VISIBLE);
-                }
-                return true;
-            });
+        params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
 
-            // Adicionar VideoView por cima de tudo
-            rootView.addView(videoView);
-            videoView.bringToFront();
-            videoView.start();
-        } catch (Exception e) {
-            android.util.Log.w("MainActivity", "Splash video not found, skipping: " + e.getMessage());
-            // Sem vídeo, mostrar WebView direto
-            if (getBridge() != null && getBridge().getWebView() != null) {
-                getBridge().getWebView().setVisibility(View.VISIBLE);
-            }
+        FrameLayout rootLayout = findViewById(android.R.id.content);
+        rootLayout.addView(adView, params);
+    }
+
+    private void loadInterstitial() {
+
+        AdRequest adRequest = new AdRequest.Builder().build();
+
+        InterstitialAd.load(this,
+                "ca-app-pub-3940256099942544/1033173712",
+                adRequest,
+                new InterstitialAdLoadCallback() {
+
+                    @Override
+                    public void onAdLoaded(InterstitialAd interstitialAd) {
+                        mInterstitialAd = interstitialAd;
+
+                        // Só mostra automaticamente na primeira abertura
+                        if (isFirstLaunch) {
+                            showInterstitial();
+                            isFirstLaunch = false;
+                        }
+                    }
+
+                    @Override
+                    public void onAdFailedToLoad(LoadAdError loadAdError) {
+                        mInterstitialAd = null;
+                    }
+                });
+    }
+
+    private void showInterstitial() {
+        if (mInterstitialAd != null) {
+            mInterstitialAd.show(this);
+            mInterstitialAd = null;
+            loadInterstitial(); // prepara próximo anúncio
         }
+    }
+
+    private void startAdLoop() {
+
+        Runnable adRunnable = new Runnable() {
+            @Override
+            public void run() {
+                showInterstitial();
+                adHandler.postDelayed(this, AD_INTERVAL);
+            }
+        };
+
+        adHandler.postDelayed(adRunnable, AD_INTERVAL);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (adView != null) {
+            adView.destroy();
+        }
+        if (adHandler != null) {
+            adHandler.removeCallbacksAndMessages(null);
+        }
+        super.onDestroy();
     }
 }
