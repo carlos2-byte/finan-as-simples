@@ -54,8 +54,8 @@ export function PendingTransactionsAlert({ items, onTogglePaid, onDismiss }: Pen
             </div>
           ))}
           {pendingItems.map(item => (
-            <div key={item.id} className="flex items-center justify-between gap-2">
-              <span className="text-sm truncate">
+            <div key={item.id} className="flex items-center justify-between gap-2 min-w-0">
+              <span className="text-sm truncate flex-1 min-w-0">
                 {item.description} — {formatCurrency(item.amount)}
               </span>
               <Button
