@@ -149,8 +149,8 @@ export default function CardStatementPage() {
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
-            <div className="flex-1">
-              <h1 className="text-xl font-bold">{card.name}</h1>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold truncate">{card.name}</h1>
               <p className="text-sm text-muted-foreground">
                 •••• {card.last4 || '****'} • Fecha dia {card.closingDay || '--'}
               </p>
