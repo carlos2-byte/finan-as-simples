@@ -18,12 +18,12 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* 3. Espaço de segurança para o banner do AdMob - GARANTE que nunca cubra o menu */}
       {/* Este espaço é posicionado ABAIXO da navegação e cria uma barreira física */}
-      <div 
+      <div
         className="fixed left-0 right-0 bg-background z-30"
-        style={{ 
+        style={{
           bottom: '0px',
-          height: '80px',
-          marginTop: '-80px',
+          height: '65px',
+          marginTop: '-65px',
           pointerEvents: 'none',
         }}
         aria-hidden="true"

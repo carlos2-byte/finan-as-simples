@@ -40,27 +40,14 @@ interface TransactionItemProps {
   isPaid?: boolean;
   isOverdue?: boolean;
   onTogglePaid?: (id: string) => void;
-  /** When true, always show the purchase date instead of the invoice due date */
   showPurchaseDate?: boolean;
 }
 
-/**
- * Get display date for a transaction
- * - Credit card transactions: use the calculated due date (vencimento)
- * - Other transactions: use the purchase date
- * 
- * Due date logic: If dueDay < closingDay, due date is in the NEXT month
- */
 function getDisplayDate(
   transaction: Transaction,
   card: { closingDay?: number; dueDay?: number } | null
 ): string {
-  // Card-to-card invoice payments must be shown on the target card's due date
-  // (the transaction.date we store), not on the payer card's own invoice due date.
-  if (transaction.isCardToCardPayment) {
-    return transaction.date;
-  }
-
+  if (transaction.isCardToCardPayment) return transaction.date;
   if (transaction.isCardPayment && transaction.invoiceMonth && card?.closingDay && card?.dueDay) {
     return getInvoiceDueDate(transaction.invoiceMonth, card.closingDay, card.dueDay);
   }
@@ -87,7 +74,6 @@ export function TransactionItem({
   const isInstallment = transaction.installments && transaction.installments > 1;
   const isCardPayment = transaction.isCardPayment && transaction.cardId;
 
-  // Calculate display date (due date for card payments, unless showPurchaseDate is set)
   useEffect(() => {
     async function calculateDate() {
       if (isCardPayment && transaction.cardId) {
@@ -104,118 +90,61 @@ export function TransactionItem({
     calculateDate();
   }, [transaction, isCardPayment, showPurchaseDate]);
 
-  // Only show status indicator for expenses
   const showStatusIndicator = transaction.type === 'expense' && onTogglePaid;
 
   return (
     <div className={cn(
-      "flex items-center gap-2 py-2 group rounded-lg px-1 transition-colors",
+      "flex items-center h-16 w-full gap-3 py-2 group rounded-xl px-2 transition-all relative overflow-hidden bg-card",
       showStatusIndicator && !isPaid && isOverdue && "bg-destructive/10",
       showStatusIndicator && !isPaid && !isOverdue && "bg-warning/10",
+      showActions ? "pr-24" : "pr-2"
     )}>
-      {/* Payment status indicator */}
-      {showStatusIndicator && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onTogglePaid?.(transaction.id);
-          }}
-          className="relative flex-shrink-0 touch-manipulation"
-          title={isPaid ? 'Marcar como não pago' : 'Marcar como pago'}
-        >
-          <div
-            className={cn(
-              'h-3 w-3 rounded-full border-2 transition-colors',
-              isPaid 
-                ? 'bg-success border-success' 
-                : isOverdue
-                  ? 'bg-destructive border-destructive animate-pulse'
-                  : 'bg-warning border-warning'
-            )}
-          />
-          {isOverdue && !isPaid && (
-            <AlertTriangle className="absolute -top-1 -right-1 h-2.5 w-2.5 text-destructive" />
-          )}
-        </button>
-      )}
-
-      <div
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-        style={{ backgroundColor: category?.color ? `${category.color}20` : 'hsl(var(--muted))' }}
-      >
-        <Icon
-          className="h-4 w-4"
-          style={{ color: category?.color || 'hsl(var(--muted-foreground))' }}
-        />
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1">
-          <p className="font-medium text-sm truncate max-w-[100px]">
-            {transaction.description || category?.name || 'Transação'}
-          </p>
-          {transaction.isCardPayment && (
-            <CreditCard className="h-3 w-3 text-muted-foreground shrink-0" />
-          )}
-          {isRecurring && (
-            <Repeat className="h-3 w-3 text-primary shrink-0" />
-          )}
-        </div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <span className="flex items-center gap-0.5">
-            {isCardPayment && <Calendar className="h-2.5 w-2.5" />}
-            {isCardPayment ? formatDateShortBR(displayDate) : formatDate(transaction.date)}
-          </span>
-          {cardName && (
-            <span className="bg-muted px-1 py-0.5 rounded text-[9px] truncate max-w-[50px]">
-              {cardName}
-            </span>
-          )}
-          {isInstallment && (
-            <span className="bg-secondary px-1 py-0.5 rounded text-[9px]">
-              {transaction.currentInstallment}/{transaction.installments}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <span
-        className={cn(
-          'font-semibold text-sm tabular-nums whitespace-nowrap',
-          isIncome ? 'text-success' : 'text-foreground'
-        )}
-      >
-        {isIncome ? '+' : ''}{formatCurrency(transaction.amount)}
-      </span>
       
+      {/* 1. ÍCONE E STATUS */}
+      <div className="flex shrink-0 items-center gap-2">
+        {showStatusIndicator && (
+          <button onClick={(e) => { e.stopPropagation(); onTogglePaid?.(transaction.id); }} className="relative">
+            <div className={cn('h-3.5 w-3.5 rounded-full border-2', isPaid ? 'bg-success border-success' : isOverdue ? 'bg-destructive border-destructive animate-pulse' : 'bg-warning border-warning')} />
+            {isOverdue && !isPaid && <AlertTriangle className="absolute -top-1.5 -right-1.5 h-3 w-3 text-destructive" />}
+          </button>
+        )}
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: category?.color ? `${category.color}20` : 'hsl(var(--muted))' }}>
+          <Icon className="h-5 w-5" style={{ color: category?.color || 'hsl(var(--muted-foreground))' }} />
+        </div>
+      </div>
+
+      {/* 2. CONTEÚDO (Texto + Valor colados) */}
+      <div className="flex flex-1 min-w-0 items-center gap-2">
+        <div className="flex flex-col min-w-0 shrink-0">
+          <div className="flex items-center gap-1">
+            <p className="font-semibold text-sm truncate leading-tight">
+              {transaction.description || category?.name || 'Transação'}
+            </p>
+            {isCardPayment && <CreditCard className="h-3 w-3 text-muted-foreground shrink-0" />}
+          </div>
+          <p className="text-[10px] text-muted-foreground truncate">
+            {isCardPayment ? formatDateShortBR(displayDate) : formatDate(transaction.date)}
+          </p>
+        </div>
+
+        {/* VALOR: ml-1 para ficar próximo, e removido o sinal manual para evitar o '--' */}
+        <span className={cn(
+          'font-bold text-sm tabular-nums truncate ml-1',
+          isIncome ? 'text-success' : 'text-foreground'
+        )}>
+          {formatCurrency(transaction.amount)}
+        </span>
+      </div>
+
+      {/* 3. BOTÕES FIXOS */}
       {showActions && (
-        <div className="flex gap-0.5">
-          {onEdit && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 touch-manipulation"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(transaction);
-              }}
-            >
-              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-            </Button>
-          )}
-          {onDelete && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 touch-manipulation"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(transaction);
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5 text-destructive" />
-            </Button>
-          )}
+        <div className="absolute right-2 flex items-center gap-1 bg-background/90 backdrop-blur-sm p-1 rounded-lg border border-border/50 shadow-sm">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onEdit?.(transaction); }}>
+            <Pencil className="h-4 w-4 text-muted-foreground" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); onDelete?.(transaction); }}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       )}
     </div>
