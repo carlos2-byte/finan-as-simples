@@ -8,7 +8,7 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="relative min-h-screen min-h-dvh w-full bg-background overflow-x-hidden">
-      <div className="pt-20 pb-4">
+      <div className="pb-4">
         {children}
       </div>
       <BottomNav />
