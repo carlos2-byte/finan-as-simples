@@ -13,15 +13,18 @@ export function AppLayout({ children }: AppLayoutProps) {
         {children}
       </div>
 
-      {/* 2. Menu de navegação */}
+      {/* 2. Menu de navegação com elevação extra para evitar sobreposição do banner */}
       <BottomNav />
 
-      {/* 3. Espaço reservado para o banner do AdMob (65px) ABAIXO da navegação */}
+      {/* 3. Espaço de segurança para o banner do AdMob - GARANTE que nunca cubra o menu */}
+      {/* Este espaço é posicionado ABAIXO da navegação e cria uma barreira física */}
       <div 
-        className="fixed left-0 right-0 z-40 bg-transparent pointer-events-none"
+        className="fixed left-0 right-0 bg-background z-30"
         style={{ 
           bottom: '0px',
-          height: '65px' 
+          height: '80px',
+          marginTop: '-80px',
+          pointerEvents: 'none',
         }}
         aria-hidden="true"
       />
